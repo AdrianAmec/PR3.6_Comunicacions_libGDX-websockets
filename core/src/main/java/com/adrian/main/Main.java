@@ -48,7 +48,7 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void create() {
-        socket = WebSockets.newSocket("wss://192.168.152.52:443");
+        socket = WebSockets.newSocket("ws://10.0.2.2:8888");
         // 2. Configurar el listener
         socket.addListener(new WebSocketAdapter() {
             @Override
@@ -121,7 +121,7 @@ public class Main extends ApplicationAdapter {
 
         touchPos = new Vector2();
 
-
+        //enviar cada 1 segundo la posicion del jugador
         Timer.schedule(new Timer.Task() {
             @Override
             public void run() {
@@ -165,7 +165,7 @@ public class Main extends ApplicationAdapter {
         if (Gdx.input.isTouched()) {
             touchPos.set(Gdx.input.getX(), Gdx.input.getY()); // Get where the touch happened on screen
             viewport.unproject(touchPos); // Convert the units to the world units of the viewport
-
+            touch(touchPos.x, touchPos.y);
             if (left.contains(touchPos.x, touchPos.y)) {
                 currentAnim = mushWalkanim;
                 posX=posX+deltaspeed*-1;
@@ -232,6 +232,7 @@ public class Main extends ApplicationAdapter {
         image.dispose();
     }
 
+    //enviar la posicion del pj
     public void move(float x,float y){
         StringWriter writer = new StringWriter();
         JsonWriter json = new JsonWriter(writer);
@@ -239,6 +240,29 @@ public class Main extends ApplicationAdapter {
         try {
             json.object() // Empieza con {
                 .set("type", "POSITION")
+                .set("posX",x)
+                .set("posY",y)
+                .pop();
+            json.close();
+
+            String resultado = writer.toString();
+            Gdx.app.log("MSG_TEST_ENVIAR", resultado);
+
+            socket.send(resultado);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //enviar la posicion del touch
+    public void touch(float x,float y){
+        StringWriter writer = new StringWriter();
+        JsonWriter json = new JsonWriter(writer);
+
+        try {
+            json.object() // Empieza con {
+                .set("type", "TOUCH")
                 .set("posX",x)
                 .set("posY",y)
                 .pop();
